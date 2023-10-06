@@ -105,4 +105,6 @@ class StockExample(server.App):
 
 
 app = StockExample()
-app.launch(port=9093)
+app.launch(port=8000)
+
+test = 'Hello world'
