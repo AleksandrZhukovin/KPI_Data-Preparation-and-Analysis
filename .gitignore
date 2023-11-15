@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+lab 4 data
+satellite_data
 .idea
 
 # Distribution / packaging
