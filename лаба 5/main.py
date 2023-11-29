@@ -5,9 +5,12 @@ import scipy.signal as sc
 
 
 """Create plots"""
+noise_loc = 0
+noise = np.random.normal(0, noise_loc, 1000)
 t = np.linspace(0, 1, 1000)
 fig, (ax1, ax2) = plt.subplots(1, 2)
 line, = ax1.plot(t, 5 * np.sin(5 * t + 1), lw=2)
+line1, = ax1.plot(t, 5 * np.sin(5 * t + 1), lw=2, visible=False, alpha=0.5)
 filter_line, = ax2.plot(t, 5 * np.sin(5 * t + 1), lw=2)
 fig.subplots_adjust(left=0.15, bottom=0.3)
 
@@ -94,9 +97,12 @@ def harmonic_with_noise(amplitude, frequency, phase=1, noise_mean=0, show_noise=
     b, a = sc.iirfilter(int(filter_order), Wn=Wn, fs=fs, btype="low", ftype="butter")
     filtered_data = sc.lfilter(b, a, amplitude * np.sin(frequency * t + phase) + noise_mean)
     if show_noise:
-        line.set_ydata(amplitude * np.sin(frequency * t + phase) + noise_mean)
+        line.set_ydata(amplitude * np.sin(frequency * t + phase))
+        line1.set_ydata(amplitude * np.sin(frequency * t + phase) + noise_mean)
+        line1.set_visible(True)
     else:
         line.set_ydata(amplitude * np.sin(frequency * t + phase))
+        line1.set_visible(False)
     if own_filter:
         filter_line.set_ydata(my_own_filter(amplitude * np.sin(frequency * t + phase) + noise_mean))
     else:
@@ -105,19 +111,22 @@ def harmonic_with_noise(amplitude, frequency, phase=1, noise_mean=0, show_noise=
 
 
 def my_own_filter(data, buffer_size=7):
-    res = [0] * len(data)
+    res = np.zeros(len(data))
     for n in range(len(data)-buffer_size):
-        for i in range(buffer_size):
-            res[n] += data[n+i]
-        res[n] /= buffer_size
-
+        res[n] += sum(data[n:n+7])
+    res /= buffer_size
     return res
 
 
 """Plot updating"""
 def update(val):
+    global noise_loc
+    global noise
+    if noise_loc != noise_slider.val:
+        noise_loc = noise_slider.val
+        noise = np.random.normal(0, noise_loc, 1000)
     Wn_slider.valmax = sampling_rate_slider.val / 2 - 0.01
-    harmonic_with_noise(amp_slider.val, freq_slider.val, noise_mean=np.random.normal(0, noise_slider.val, 1000),
+    harmonic_with_noise(amp_slider.val, freq_slider.val, noise_mean=noise,
                         show_noise=check.get_status()[0], filter_order=filter_order_slider.val, Wn=Wn_slider.val,
                         fs=sampling_rate_slider.val, own_filter=use_own.get_status()[0])
 
